@@ -134,8 +134,8 @@ app.get("/organization", authMiddleware, (req,res) => {
   const userId = req.userId;
   const organizationId = parseInt(req.query.organizationId);
 
-  const organisation = organizations.find(org => org.id === organizationId);
-  if(!organisation || organisation.admin !== userId) {
+  const organization = organizations.find(org => org.id === organizationId);
+  if(!organization || organization.admin !== userId) {
     res.status(411).json({
       message: "either this organization doest excist or you are not the admin"
     });
@@ -146,7 +146,7 @@ app.get("/organization", authMiddleware, (req,res) => {
     organization: {
       ...organization,
       members: organization.members.map(memberId => {
-        const user = USERS.find(user => user.id === memberId);
+        const user = users.find(user => user.id === memberId);
         return {
           id: user.id,
           username: user.username
@@ -196,7 +196,7 @@ app.delete("/members", authMiddleware, (req,res) => {
     return;
   }
 
-  organization.members = organization.members.filter(user => user.id !== memberUser.id);
+  organization.members = organization.members.filter(user => user !== memberUser.id);
   
   res.json({
     message: "New memeber added"
