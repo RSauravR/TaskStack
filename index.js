@@ -9,19 +9,7 @@ let issues_id = 1;
 
 const users = [];
 
-const organizations = [{
-    id: 1,
-    title: "100xdevs",
-    description: "Learning coding platform",
-    admin: 1,
-    members: [2]
-  }, {
-    id: 2,
-    title: "ramans org",
-    description: "Experimenting",
-    admin: 1,
-    members: []
-}];
+const organizations = [];
 
 const boards = [{
     id: 1,
@@ -142,6 +130,33 @@ app.post("/issue", (req,res) => {
 });
 
 //READ
+app.get("/organization", authMiddleware, (req,res) => {
+  const userId = req.userId;
+  const organizationId = parseInt(req.query.organizationId);
+
+  const organisation = organizations.find(org => org.id === organizationId);
+  if(!organisation || organisation.admin !== userId) {
+    res.status(411).json({
+      message: "either this organization doest excist or you are not the admin"
+    });
+    return;
+  }
+
+  res.json({
+    organization: {
+      ...organization,
+      members: organization.members.map(memberId => {
+        const user = USERS.find(user => user.id === memberId);
+        return {
+          id: user.id,
+          username: user.username
+        }
+      })
+    }
+  });
+
+});
+
 app.get("/boards", (req,res) => {
 
 });
