@@ -2,6 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const {authMiddleware} = require("./middleware/auth");
 const {organizationAdminMiddleware} = require('./middleware/organizationAdmin');
+const {boardMemberOrAdmin} = require("./middleware/boardMemberOrAdmin");
 
 let users_id = 1;
 let organization_id = 1;
@@ -12,11 +13,7 @@ const users = [];
 
 const organizations = [];
 
-const boards = [{
-    id: 1,
-    title: "100xschool website (frontend)",
-    organizationId: 1
-}];
+const boards = [];
 
 const issues = [{
     id: 1,
@@ -122,7 +119,10 @@ app.post("/board", authMiddleware, organizationAdminMiddleware, (req,res) => {
     title: req.body.title,
     organizationId: organization.id
   });
-  res.json({ message: "Board created successfully" });
+  res.json({ 
+    message: "Board created successfully",
+    id: board_id - 1 
+  });
 });
 
 app.post("/issue", (req,res) => {
@@ -148,8 +148,12 @@ app.get("/organization", authMiddleware, organizationAdminMiddleware, (req,res) 
 
 });
 
-app.get("/boards", (req,res) => {
-
+app.get("/boards", authMiddleware, boardMemberOrAdmin, (req,res) => {
+  const organization = req.organization;
+  const orgBoards = boards.filter(board => board.organizationId === organization.id);
+  res.json({
+    boards: orgBoards
+  });
 });
 
 app.get("/issues", (req,res) => {
