@@ -1,8 +1,11 @@
+const { users, organizations, boards, issues } = require("../db");
+
+
 function boardMemberOrAdmin(req, res, next) {
   const userId = req.userId; // comes from authMiddleware
 
   // Support both POST/PUT (body) and GET (query)
-  const organizationId = parseInt(req.body.organizationId || req.query.organizationId);
+  const organizationId = parseInt(req.query.organizationId || req.body?.organizationId);
 
   const organization = organizations.find(org => org.id === organizationId);
 

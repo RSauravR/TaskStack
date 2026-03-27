@@ -3,29 +3,12 @@ const jwt = require("jsonwebtoken");
 const {authMiddleware} = require("./middleware/auth");
 const {organizationAdminMiddleware} = require('./middleware/organizationAdmin');
 const {boardMemberOrAdmin} = require("./middleware/boardMemberOrAdmin");
+const { users, organizations, boards, issues } = require("./db");
 
 let users_id = 1;
 let organization_id = 1;
 let board_id = 1;
 let issues_id = 1;
-
-const users = [];
-
-const organizations = [];
-
-const boards = [];
-
-const issues = [{
-    id: 1,
-    title: "Add dark mode",
-    boardId: 1,
-    status: "IN_PROGRESS"
-  }, {
-    id: 2,
-    title: "Allow admins to create more courses",
-    boardId: 1,
-    status: "DONE",
-}];
 
 const app = express();
 app.use(express.json());
@@ -93,16 +76,16 @@ app.post("/organization", authMiddleware, (req,res) => {
 
 app.post("/add-members-to-organization", authMiddleware, organizationAdminMiddleware, (req,res) => {
   const organization = req.organization;
-  const memberId = req.body.memberId;
+  const memberUserName = req.body.memberUserName;
 
-  const memberUser = users.find(u => u.id === memberId);
-  if (!memberUser) {
+  const userExists = users.find(u => u.username === memberUserName);
+  if (!userExists) {
     res.status(404).json({ message: "User not found" });
     return;
   }
 
-  if (!organization.members.includes(memberUser.id)) {
-    organization.members.push(memberUser.id); 
+  if (!organization.members.includes(userExists.id)) {
+    organization.members.push(userExists.id); 
   }
 
   res.json({
@@ -125,8 +108,23 @@ app.post("/board", authMiddleware, organizationAdminMiddleware, (req,res) => {
   });
 });
 
-app.post("/issue", (req,res) => {
+app.post("/issue", authMiddleware, boardMemberOrAdmin, (req,res) => {
+  const boardId = req.body.boardId;
+  if (!boardId) {
+    res.status(400).json({ message: "valid boardId is required" });
+    return;
+  }
 
+  issues.push({ 
+    id: issues_id++,
+    title: req.body.title,
+    boardId: boardId,
+    status: req.body.status
+  });
+  res.json({
+    message: "issue created successfully",
+    id: issues_id - 1
+  });
 });
 
 //READ
@@ -156,8 +154,17 @@ app.get("/boards", authMiddleware, boardMemberOrAdmin, (req,res) => {
   });
 });
 
-app.get("/issues", (req,res) => {
+app.get("/issues", authMiddleware, boardMemberOrAdmin, (req,res) => {
+  const boardId = parseInt(req.query.boardId);
+  if (!boardId) {
+    res.status(400).json({ message: " valid boardId is required" });
+    return;
+  }
 
+  const boardIssues = issues.filter(issue => issue.boardId === boardId);
+  res.json({
+    issues: boardIssues
+  });
 });
 
 app.get("/members", (req,res) => {
