@@ -149,6 +149,9 @@ app.get("/organization", authMiddleware, organizationAdminMiddleware, (req,res) 
 app.get("/boards", authMiddleware, boardMemberOrAdmin, (req,res) => {
   const organization = req.organization;
   const orgBoards = boards.filter(board => board.organizationId === organization.id);
+  if(orgBoards.length  === 0){
+    return res.status(404).json({ message: "Board not found" });
+  }
   res.json({
     boards: orgBoards
   });
@@ -167,19 +170,52 @@ app.get("/issues", authMiddleware, boardMemberOrAdmin, (req,res) => {
   });
 });
 
-app.get("/members", (req,res) => {
+app.get("/members", authMiddleware, organizationAdminMiddleware, (req,res) => {
+  const organization = req.organization;
 
+  const enrichedMembers = organization.members.map(memberId => {
+    const user = users.find(u => u.id === memberId);
+    return { id: user.id, username: user.username };
+  });
+
+  if (enrichedMembers.length === 0) {
+    return res.status(404).json({ message: "No members found in this organization" });
+  }
+
+  res.json({ members: enrichedMembers });
 });
 
 //UPDATE
-app.put("/issues", (req,res) => {
+app.put("/issues", authMiddleware, boardMemberOrAdmin, (req,res) => {
+  const issueId = parseInt(req.body.issueId);
+  const newStatus = req.body.status;
 
+  if (isNaN(issueId)) {
+    return res.status(400).json({ message: "Valid issueId is required" });
+  }
+
+  if (!newStatus) {
+    return res.status(400).json({ message: "New status is required" });
+  }
+
+  const issue = issues.find(i => i.id === issueId);
+  if (!issue) {
+    return res.status(404).json({ message: "Issue not found" });
+  }
+
+  issue.status = newStatus;
+
+  res.json({
+    message: "Issue status updated successfully",
+    issue
+  });
 });
+
 
 //DELETE
 app.delete("/members", authMiddleware, organizationAdminMiddleware, (req,res) => {
   const organization = req.organization;
-  const memberId = req.body.memberId;
+  const memberId = parseInt(req.body.memberId);
 
   organization.members = organization.members.filter(id => id !== memberId);
   
@@ -187,5 +223,5 @@ app.delete("/members", authMiddleware, organizationAdminMiddleware, (req,res) =>
     message: "member removed"
   });
 });
-
+ 
 app.listen(3000);
