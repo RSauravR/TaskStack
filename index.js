@@ -1,15 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const {authMiddleware} = require("./middleware/auth");
-const {organizationAdminMiddleware} = require('./middleware/organizationAdmin');
-const {boardMemberOrAdmin} = require("./middleware/boardMemberOrAdmin");
-const { users, organizations, boards, issues } = require("./db");
 const {userModel, organizationModel, boardModel, issueModel} = require("./models");
-
-let users_id = 1;
-let organization_id = 1;
-let board_id = 1;
-let issues_id = 1;
 
 const app = express();
 app.use(express.json());
