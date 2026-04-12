@@ -4,6 +4,7 @@ const {authMiddleware} = require("./middleware/auth");
 const {organizationAdminMiddleware} = require('./middleware/organizationAdmin');
 const {boardMemberOrAdmin} = require("./middleware/boardMemberOrAdmin");
 const { users, organizations, boards, issues } = require("./db");
+const {userModel, organizationModel} = require("./models");
 
 let users_id = 1;
 let organization_id = 1;
@@ -14,11 +15,13 @@ const app = express();
 app.use(express.json());
 
 //CREATE
-app.post("/signup", (req,res) => {
+app.post("/signup", async (req,res) => {
   const username = req.body.username;
   const password = req.body.password;
 
-  const userExists = users.find( (user) => user.username === username);
+  const userExists = await userModel.findOne({
+    userName: username,
+  })
   if(userExists){
     res.status(409).json({
       message: "user with this user name exist"
@@ -26,23 +29,27 @@ app.post("/signup", (req,res) => {
     return;
   }
 
-  users.push({
+  const newUser = await userModel.create({
     username: username,
-    password: password,
-    id: users_id++,
-  });
+    password: password
+  })
 
   res.json({
+    id: newUser._id,
     message: "you have signedup successfully"
   });
 
 });
 
-app.post("/signin", (req,res) => {
+app.post("/signin", async (req,res) => {
   const username = req.body.username;
   const password = req.body.password;
 
-  const userExists = users.find(user => user.username === username && user.password === password);
+  const userExists = await userModel.findOne({
+    username: username,
+    password: password
+  });
+  
   if(!userExists){
     res.status(401).json({
       message: "incorrect credentials"
