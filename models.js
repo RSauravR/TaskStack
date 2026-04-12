@@ -18,10 +18,29 @@ const organizationSchema = mongoose.Schema({
     members: [{ type: mongoose.Types.ObjectId, ref: "users" }]   
 });
 
+const boardSchema = mongoose.Schema({
+    title: String,
+    organizationId: {type: mongoose.Types.ObjectId, ref: "organization"}
+});
+
+const issueSchema = mongoose.Schema({
+    title: String,
+    boardId: {type: mongoose.Types.ObjectId, ref: "board"},
+     status: { 
+        type: String, 
+        enum: ["todo", "in-progress", "done"],
+        default: "todo"
+    }
+});
+
 const organizationModel = mongoose.model("organization", organizationSchema);
 const userModel = mongoose.model("users", userSchema);
+const boardModel = mongoose.model("board", boardSchema);
+const issueModel = mongoose.model("issue", issueSchema);
 
 module.exports = {
     organizationModel,
-    userModel
+    userModel,
+    boardModel,
+    issueModel
 }
