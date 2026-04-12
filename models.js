@@ -12,10 +12,10 @@ const userSchema = mongoose.Schema({
 });
 
 const organizationSchema = mongoose.Schema({
-    username: String,
+    title: String,
     description: String,
-    admin: mongoose.Types.ObjectId,
-    members: [mongoose.Types.ObjectId]
+    admin: { type: mongoose.Types.ObjectId, ref: "users" },
+    members: [{ type: mongoose.Types.ObjectId, ref: "users" }]   
 });
 
 const organizationModel = mongoose.model("organization", organizationSchema);
