@@ -134,6 +134,7 @@ Access is enforced via middleware on every protected route.
 
 ---
 
-## License
+### License
+This project is for learning and demonstration purposes.
 
-This project is open source and available under the [MIT License](LICENSE).
+**Author:** Saurav R
